@@ -1,0 +1,4 @@
+- Home-screen widget now self-updates every minute (live, no more 30-minute lag).
+- Time converter: pick the reference city by tapping it, choose any date, and see day-rollover badges (+1d / -1d).
+- Custom accent colours via a colour wheel; flags on by default.
+- GPL-3.0 licence notice in Settings.

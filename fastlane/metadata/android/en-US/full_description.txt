@@ -1,0 +1,12 @@
+Zham is a clean, fast world clock — see the time across the world, on your home screen, with a built-in time-zone converter.
+
+Features:
+
+* World clock — track the current time in as many cities as you like, with live seconds and country flags.
+* Easy to manage — search 600+ time zones to add a city, swipe to delete, drag to reorder.
+* Time converter — scrub a time and date to see the matching moment everywhere at once; pick any city as the reference and spot day rollovers at a glance (+1d / -1d).
+* Make it yours — Light / Dark / System theme and any accent color, via a colour wheel.
+* Home-screen widget — resizable, scrollable, matches your theme, and self-updates every minute.
+* Flexible format — 12-hour / 24-hour presets, or your own custom pattern.
+
+Zham runs entirely offline: no accounts, no network access, no tracking. Your cities and settings never leave your device.
