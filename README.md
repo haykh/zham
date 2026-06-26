@@ -12,6 +12,12 @@
   <a href="LICENSE.md"><img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License: GPL-3.0" /></a>
 </p>
 
+<p align="center">
+  <a href="https://f-droid.org/packages/io.github.haykh.zham/">
+    <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="70" />
+  </a>
+</p>
+
 ---
 
 ## Features
@@ -35,7 +41,9 @@
 
 ## Install
 
-Download the latest `zham-*.apk` from the [**Releases**](../../releases) page and open it on your phone. Requires **Android 8.0 (API 26)** or newer. Your browser or file manager may ask you to allow installing apps from this source.
+**[Get it on F-Droid](https://f-droid.org/packages/io.github.haykh.zham/)** — recommended, with automatic updates.
+
+Or grab the latest `zham-*.apk` from the [**Releases**](../../releases) page and open it on your phone. Requires **Android 8.0 (API 26)** or newer; your browser or file manager may ask you to allow installing apps from this source.
 
 ## Privacy
 
@@ -48,3 +56,5 @@ Zham is free software, released under the [GNU General Public License v3.0](LICE
 ---
 
 <sub>Building Zham yourself? See [DEV.md](DEV.md) for the NixOS / devenv setup and build workflow.</sub>
+
+<sub>This app was almost entirely written with [Claude](https://claude.ai) )</sub>
