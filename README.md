@@ -57,4 +57,4 @@ Zham is free software, released under the [GNU General Public License v3.0](LICE
 
 <sub>Building Zham yourself? See [DEV.md](DEV.md) for the NixOS / devenv setup and build workflow.</sub>
 
-<sub>This app was almost entirely written with [Claude](https://claude.ai) )</sub>
+<sub>This app was almost entirely written with [Claude](https://claude.ai)</sub>
