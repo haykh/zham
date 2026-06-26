@@ -13,9 +13,11 @@
 </p>
 
 <p align="center">
+  <span>coming soon...</span>
+  <br/>
   <a href="https://f-droid.org/packages/io.github.haykh.zham/">
     <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="70" />
-  </a>
+  </a>  
 </p>
 
 ---
