@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,6 +39,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,6 +57,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -487,6 +490,7 @@ fun SettingsDialog(
     onDismiss: () -> Unit,
 ) {
     val now = remember { ZonedDateTime.now() }
+    var showLicense by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = MaterialTheme.shapes.large) {
@@ -626,11 +630,53 @@ fun SettingsDialog(
                         Spacer(Modifier.height(12.dp))
                         ColorSlidersPicker(color = accent, onColorChange = onSetAccent)
                     }
+
+                    Spacer(Modifier.height(20.dp))
+                    TextButton(
+                        onClick = { showLicense = true },
+                        contentPadding = PaddingValues(0.dp),
+                    ) { Text("License") }
                 }
             }
         }
     }
+
+    if (showLicense) {
+        AlertDialog(
+            onDismissRequest = { showLicense = false },
+            confirmButton = {
+                TextButton(onClick = { showLicense = false }) { Text("Close") }
+            },
+            title = { Text("License") },
+            text = {
+                Text(
+                    text = LICENSE_TEXT,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                )
+            },
+        )
+    }
 }
+
+// Paragraphs are single logical lines so the Text wraps them to the dialog width;
+// only the header/copyright line break and the paragraph gaps are kept.
+private val LICENSE_TEXT =
+    "Zham — a world clock and time-zone converter for Android.\n" +
+        "Copyright (C) 2026  @haykh\n" +
+        "\n" +
+        "This program is free software: you can redistribute it and/or modify " +
+        "it under the terms of the GNU General Public License as published by " +
+        "the Free Software Foundation, either version 3 of the License, or " +
+        "(at your option) any later version.\n" +
+        "\n" +
+        "This program is distributed in the hope that it will be useful, " +
+        "but WITHOUT ANY WARRANTY; without even the implied warranty of " +
+        "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the " +
+        "GNU General Public License for more details.\n" +
+        "\n" +
+        "You should have received a copy of the GNU General Public License " +
+        "along with this program.  If not, see <http://www.gnu.org/licenses/>."
 
 @Composable
 private fun AccentSwatch(

@@ -1,70 +1,50 @@
-# World Clock — Android app + widget (localized NixOS dev env)
+<p align="center">
+  <img src="screenshots/icon.png" width="120" alt="Zham app icon" />
+</p>
 
-A minimal Jetpack Compose app showing the time in several cities, plus a Glance
-home-screen widget. Developed entirely from this folder with **nvim or VS Code**
-(no Android Studio), and torn down completely with two commands.
+<h1 align="center">Zham</h1>
 
-## Stack
-- **Kotlin + Jetpack Compose** — app UI (`MainActivity.kt`, `Clocks.kt`)
-- **Glance** — the home-screen widget (`WorldClockWidget*.kt`); Glance is "Compose for App Widgets"
-- **devenv** (`devenv.nix`) — pins JDK 17, Gradle, a single Android SDK platform/build-tools, one emulator system image, plus the LSPs/formatters your editor needs
+<p align="center">A clean, fast world clock for Android -- see the time across the world, on your home screen, with a built-in time-zone converter.</p>
 
-## (a) Everything heavy stays in this directory
-| Thing | Location | Remove with |
-|---|---|---|
-| AVD disk + snapshots | `./.cache/android` | `rm -rf .cache` |
-| Gradle deps + cache | `./.cache/gradle` | `rm -rf .cache` |
-| SDK / emulator / system image binaries | `/nix/store` (shared, immutable) | `nix store gc` |
+<p align="center"><em>zham (ժամ)</em></p>
 
-Nothing is written to `~/.android`, `~/.gradle`, or `~/Android/Sdk`.
-`rm -rf .cache && nix store gc` wipes 100% of it.
+<p align="center">
+  <a href="LICENSE.md"><img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License: GPL-3.0" /></a>
+</p>
 
-## (b) "Hot reload" without an IDE
-There is no stateful hot reload outside Android Studio. What you get instead is
-an automatic **rebuild → reinstall-in-place → relaunch** loop, run by `watch-app`:
+---
 
-```sh
-watch-app   # watches app/src + app/build.gradle.kts, redeploys on every save
-```
+## Features
 
-- Uses `gradlew installDebug` — an incremental update install, so the app is **not
-  uninstalled** and its data is preserved (no manual uninstall/reinstall).
-- For an app this small the loop is a few seconds, then `MainActivity` relaunches
-  automatically. You lose in-memory state across edits; that's the one thing only
-  Android Studio's Live Edit can keep.
+- 🕐 **World clock** -- track the current time in as many cities as you like, with live seconds and country flags.
+- ➕ **Easy to manage** -- search 600+ time zones to add a city, swipe to delete, drag to reorder.
+- 🔄 **Time converter** -- scrub a time *and* date to see the matching moment everywhere at once; pick any city as the reference and spot day rollovers at a glance (**+1d** / **−1d**).
+- 🎨 **Make it yours** -- Light / Dark / System theme and any accent color, via a colour wheel.
+- 📲 **Home-screen widget** -- resizable, scrollable, matches your theme, and stays in sync as you change your cities.
+- ⏱️ **Flexible format** -- 12-hour / 24-hour presets, or your own custom pattern.
 
-## Editor setup
-Both editors use `kotlin-language-server` (provided by the dev shell).
+## Screenshots
 
-- **Tooling on PATH**: launch your editor from inside `devenv shell`, or install
-  [direnv](https://direnv.net), add an `.envrc` containing `use devenv`, and run
-  `direnv allow` once — it then auto-loads the environment (and `adb`, the LSPs,
-  formatters) whenever you `cd` in.
-- **nvim** (LazyVim): add to `lua/plugins/lang.lua` →
-  - `nvim-lspconfig` servers: `kotlin_language_server = {}`, `lemminx = {}`
-  - `conform` `formatters_by_ft`: `kotlin = { "ktlint" }` (XML formats via lemminx LSP fallback)
-  - treesitter `ensure_installed`: `"kotlin"`
-- **VS Code**: install the **fwcd "Kotlin"** extension (it drives `kotlin-language-server`);
-  Kotlin completion for Android/Compose symbols is decent but not as deep as Android Studio.
+<p align="center">
+  <img src="screenshots/01-clocks.png" width="30%" alt="World clock list" />
+  &nbsp;
+  <img src="screenshots/02-converter.png" width="30%" alt="Time converter" />
+  &nbsp;
+  <img src="screenshots/03-settings.png" width="30%" alt="Settings" />
+</p>
 
-## First-time setup
-```sh
-devenv shell                             # enter the dev shell (first run downloads the SDK)
-gradle wrapper --gradle-version 8.10.2   # generate ./gradlew (once)
-create-avd                               # build the emulator image into ./.cache
-```
+## Install
 
-## Each session
-```sh
-devenv shell         # (or just cd in, if direnv is set up)
-run-emulator &       # boot the localized emulator; wait for the home screen
-watch-app            # live-redeploy loop — edit a .kt and watch it reload
-```
+Download the latest `zham-*.apk` from the [**Releases**](../../releases) page and open it on your phone. Requires **Android 8.0 (API 26)** or newer. Your browser or file manager may ask you to allow installing apps from this source.
 
-Place the widget: long-press the emulator home screen → Widgets → **World Clock**.
+## Privacy
 
-Manual one-shot build/run (instead of `watch-app`):
-```sh
-./gradlew installDebug
-adb shell am start -n com.example.worldclock/.MainActivity
-```
+Zham runs entirely offline -- no accounts, no network access, no tracking. Your cities and settings never leave your device.
+
+## License
+
+Zham is free software, released under the [GNU General Public License v3.0](LICENSE.md) (or later).
+
+---
+
+<sub>Building Zham yourself? See [DEV.md](DEV.md) for the NixOS / devenv setup and build workflow.</sub>
