@@ -2,26 +2,25 @@ package io.github.haykh.zham
 
 import android.content.Context
 import android.content.res.Configuration
+import android.widget.RemoteViews
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.LocalContext
+import androidx.glance.appwidget.AndroidRemoteViews
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
-import androidx.glance.layout.Row
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.padding
-import androidx.glance.text.Text
-import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
 import kotlinx.coroutines.flow.first
-import java.time.ZonedDateTime
 
 class WorldClockWidget : GlanceAppWidget() {
     // Re-compose to the widget's actual size when the user resizes it on the home screen.
@@ -64,15 +63,14 @@ private fun WidgetContent(
     dark: Boolean,
     accent: Color,
 ) {
-    // Captured at update time. Widgets refresh on updatePeriodMillis or a manual
-    // updateAll() (the app triggers one whenever the relevant settings change).
-    val now = ZonedDateTime.now()
-    val formatter = Clocks.formatterOf(pattern)
+    val context = LocalContext.current
 
     // Mirror the app's theme: dark/light surface + onSurface, accent on the time.
     val background = if (dark) Color(0xFF1C1B1F) else Color(0xFFFDFCFF)
-    val onBackground = ColorProvider(if (dark) Color(0xFFE6E1E5) else Color(0xFF1C1B1F))
-    val accentColor = ColorProvider(accent)
+    val onBackground = (if (dark) Color(0xFFE6E1E5) else Color(0xFF1C1B1F)).toArgb()
+    val clockColor = accent.toArgb()
+    // TextClock self-updates every minute (not per second), so strip seconds.
+    val minutePattern = pattern.replace(Regex("[:.\\s]?ss"), "").ifBlank { "HH:mm" }
 
     // LazyColumn scrolls when the cities don't fit the (resizable) widget height.
     LazyColumn(
@@ -84,17 +82,19 @@ private fun WidgetContent(
     ) {
         items(cities) { city ->
             val label = if (showFlags) "${Flags.emojiFor(city.zoneIdName)} ${city.label}" else city.label
-            Row(modifier = GlanceModifier.fillMaxWidth().padding(vertical = 2.dp)) {
-                Text(
-                    text = label,
-                    style = TextStyle(color = onBackground),
-                    modifier = GlanceModifier.defaultWeight(),
-                )
-                Text(
-                    text = Clocks.format(city, now, formatter),
-                    style = TextStyle(color = accentColor),
-                )
-            }
+            // Whole row as one RemoteViews: label + a self-ticking TextClock.
+            AndroidRemoteViews(
+                modifier = GlanceModifier.fillMaxWidth(),
+                remoteViews =
+                    RemoteViews(context.packageName, R.layout.widget_row).apply {
+                        setTextViewText(R.id.row_label, label)
+                        setTextColor(R.id.row_label, onBackground)
+                        setString(R.id.row_clock, "setTimeZone", city.zoneIdName)
+                        setCharSequence(R.id.row_clock, "setFormat12Hour", minutePattern)
+                        setCharSequence(R.id.row_clock, "setFormat24Hour", minutePattern)
+                        setTextColor(R.id.row_clock, clockColor)
+                    },
+            )
         }
     }
 }

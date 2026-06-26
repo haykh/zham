@@ -14,8 +14,8 @@ android {
         applicationId = "io.github.haykh.zham"
         minSdk = 26 // API 26+ gives us java.time with no desugaring
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1.0"
     }
 
     buildFeatures {
