@@ -1,0 +1,7 @@
+# Latest tested nixpkgs (devenv's rolling channel tracks nixpkgs-unstable).
+inputs:
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
+
+# Android SDK is unfree-licensed.
+allowUnfree: true

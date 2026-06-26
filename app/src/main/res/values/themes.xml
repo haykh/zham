@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Platform theme = no AppCompat / Material XML dependency needed.
+         Compose draws the actual UI; this only styles the window. -->
+    <style name="Theme.WorldClock" parent="@android:style/Theme.Material.NoActionBar" />
+</resources>

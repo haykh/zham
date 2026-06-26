@@ -1,0 +1,7 @@
+root = true
+
+[*.{kt,kts}]
+# Jetpack Compose @Composable functions are PascalCase by convention, which
+# ktlint's standard naming rule rejects (and can't auto-fix), making it exit
+# non-zero so conform reports "Formatter failed". Disable it for this project.
+ktlint_standard_function-naming = disabled
