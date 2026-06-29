@@ -1,4 +1,4 @@
-{ pkgs, lib, config, ... }:
+{ pkgs, ... }:
 
 let
   # Pin EXACTLY the SDK pieces we use. Change a version here and nothing else
@@ -35,10 +35,12 @@ in
   # Mason is disabled on NixOS, so these must be on PATH — here they are, but
   # only inside this environment.
   packages = [
+    pkgs.gh
+    pkgs.apksigner
     pkgs.kotlin-language-server # LSP for .kt / .kts
-    pkgs.ktlint                 # Kotlin formatter + linter
-    pkgs.lemminx                # XML LSP (AndroidManifest.xml, res/*.xml)
-    pkgs.nixfmt-rfc-style       # `nixfmt` binary used by conform
+    pkgs.ktlint # Kotlin formatter + linter
+    pkgs.lemminx # XML LSP (AndroidManifest.xml, res/*.xml)
+    pkgs.nixfmt-rfc-style # `nixfmt` binary used by conform
   ];
 
   # --- One-shot helpers, kept out of your global PATH ------------------------

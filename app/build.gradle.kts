@@ -14,8 +14,8 @@ android {
         applicationId = "io.github.haykh.zham"
         minSdk = 26 // API 26+ gives us java.time with no desugaring
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.1.1"
+        versionCode = 4
+        versionName = "1.1.2"
     }
 
     buildFeatures {
@@ -31,9 +31,28 @@ android {
         jvmTarget = "17"
     }
 
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+
+    // Define signing BEFORE buildTypes so findByName("release") can resolve it.
+    val keystoreFile = System.getenv("ZHAM_KEYSTORE_FILE")?.let(::file)
+    signingConfigs {
+        if (keystoreFile != null && keystoreFile.exists()) {
+            create("release") {
+                storeFile = keystoreFile
+                storePassword = System.getenv("ZHAM_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ZHAM_KEY_ALIAS")
+                keyPassword = System.getenv("ZHAM_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 }

@@ -23,3 +23,10 @@ devenv.local.nix
 CLAUDE.md
 INSTRUCTIONS.md
 PLAN.md
+
+# Release signing — never commit the keystore or its base64
+zham-release.keystore
+*.keystore
+*.jks
+*.keystore.b64
+keystore.properties
