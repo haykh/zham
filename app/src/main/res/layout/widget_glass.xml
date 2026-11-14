@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Frosted-glass layers drawn behind the widget's rows. A launcher can't blur what's behind
+     a widget, so "frosted" is approximated with sheen + grain + rim; the app scales each
+     layer's opacity (setImageAlpha) from the user's "Frosted glass" setting. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/glass_sheen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_glass_sheen" />
+
+    <ImageView
+        android:id="@+id/glass_grain"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_glass_grain" />
+
+    <ImageView
+        android:id="@+id/glass_edge"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_glass_edge" />
+</FrameLayout>

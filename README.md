@@ -25,10 +25,10 @@
 ## Features
 
 - 🕐 **World clock** -- track the current time in as many cities as you like, with live seconds and country flags.
-- ➕ **Easy to manage** -- search 600+ time zones to add a city, swipe to delete, drag to reorder.
+- ➕ **Easy to manage** -- search 600+ time zones to add a city, tap to rename it (*Tokyo*, *NYC*, …), swipe to delete, drag to reorder.
 - 🔄 **Time converter** -- scrub a time *and* date to see the matching moment everywhere at once; pick any city as the reference and spot day rollovers at a glance (**+1d** / **−1d**).
-- 🎨 **Make it yours** -- Light / Dark / System theme and any accent color, via a colour wheel.
-- 📲 **Home-screen widget** -- resizable, scrollable, matches your theme, and stays in sync as you change your cities.
+- 🎨 **Make it yours** -- Light / Dark / System theme with an optional pure-black AMOLED mode, and any accent color via a colour wheel or hex code.
+- 📲 **Home-screen widget** -- resizable, scrollable, matches your theme (or goes transparent, with an optional frosted-glass look and your choice of text colours), opens the app on tap, and stays in sync as you change your cities.
 - ⏱️ **Flexible format** -- 12-hour / 24-hour presets, or your own custom pattern.
 
 ## Screenshots

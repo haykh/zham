@@ -7,9 +7,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.WorldClock">
 
+        <!-- singleTask: tapping the widget (via Glance's trampoline activity) brings the
+             running app forward instead of stacking another copy on the back stack. -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -2,13 +2,11 @@ package io.github.haykh.zham
 
 import android.app.Application
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -25,14 +23,14 @@ class WorldClockViewModel(
     val showFlags: StateFlow<Boolean> = repo.showFlags.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     val themeMode: StateFlow<ThemeMode> =
-        repo.themeMode
-            .map { runCatching { ThemeMode.valueOf(it) }.getOrDefault(ThemeMode.SYSTEM) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ThemeMode.SYSTEM)
+        repo.themeMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ThemeMode.SYSTEM)
 
-    val accent: StateFlow<Color> =
-        repo.accent
-            .map { stored -> stored?.toIntOrNull()?.let { Color(it) } ?: DefaultAccent }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DefaultAccent)
+    val pureBlack: StateFlow<Boolean> = repo.pureBlack.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val accent: StateFlow<Color> = repo.accent.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DefaultAccent)
+
+    val widgetStyle: StateFlow<WidgetStyle> =
+        repo.widgetStyle.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WidgetStyle())
 
     fun addCity(city: City) =
         viewModelScope.launch {
@@ -48,6 +46,16 @@ class WorldClockViewModel(
             repo.setCities(cities.value.filterNot { it.zoneIdName == city.zoneIdName })
             refreshWidget()
         }
+
+    /** Rename a city; a blank name restores the default derived from its zone id. */
+    fun renameCity(
+        city: City,
+        label: String,
+    ) = viewModelScope.launch {
+        val name = label.trim().ifEmpty { City.defaultLabel(city.zoneIdName) }
+        repo.setCities(cities.value.map { if (it.zoneIdName == city.zoneIdName) it.copy(label = name) else it })
+        refreshWidget()
+    }
 
     fun moveCity(
         from: Int,
@@ -87,13 +95,31 @@ class WorldClockViewModel(
 
     fun setThemeMode(mode: ThemeMode) =
         viewModelScope.launch {
-            repo.setThemeMode(mode.name)
+            repo.setThemeMode(mode)
+            refreshWidget()
+        }
+
+    fun setPureBlack(enabled: Boolean) =
+        viewModelScope.launch {
+            repo.setPureBlack(enabled)
             refreshWidget()
         }
 
     fun setAccent(color: Color) =
         viewModelScope.launch {
-            repo.setAccent(color.toArgb().toString())
+            repo.setAccent(color)
+            refreshWidget()
+        }
+
+    fun restoreDefaults() =
+        viewModelScope.launch {
+            repo.resetToDefaults()
+            refreshWidget()
+        }
+
+    fun setWidgetStyle(style: WidgetStyle) =
+        viewModelScope.launch {
+            repo.setWidgetStyle(style)
             refreshWidget()
         }
 }

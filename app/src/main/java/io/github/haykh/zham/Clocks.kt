@@ -21,6 +21,11 @@ data class City(
 ) {
     val zone: ZoneId
         get() = ZoneId.of(zoneIdName)
+
+    companion object {
+        /** Name derived from the zone id, e.g. "America/New_York" → "New York". */
+        fun defaultLabel(zoneIdName: String): String = zoneIdName.substringAfterLast('/').replace('_', ' ')
+    }
 }
 
 object Flags {
