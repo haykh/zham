@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -29,6 +30,7 @@ private object Keys {
     val THEME_MODE = stringPreferencesKey("theme_mode")
     val PURE_BLACK = booleanPreferencesKey("pure_black")
     val ACCENT = stringPreferencesKey("accent")
+    val WIDGET_BG_COLOR = intPreferencesKey("widget_bg_color")
     val WIDGET_BG_ALPHA = floatPreferencesKey("widget_bg_alpha")
     val WIDGET_FROST = floatPreferencesKey("widget_frost")
     val WIDGET_LABEL_COLOR = stringPreferencesKey("widget_label_color")
@@ -57,6 +59,7 @@ private fun Preferences.accent(): Color = this[Keys.ACCENT]?.toIntOrNull()?.let 
 private fun Preferences.widgetStyle(): WidgetStyle {
     val defaults = WidgetStyle()
     return WidgetStyle(
+        backgroundColor = this[Keys.WIDGET_BG_COLOR]?.let { Color(it) } ?: defaults.backgroundColor,
         backgroundAlpha = this[Keys.WIDGET_BG_ALPHA] ?: defaults.backgroundAlpha,
         frost = this[Keys.WIDGET_FROST] ?: defaults.frost,
         labelColor = enumOrDefault(this[Keys.WIDGET_LABEL_COLOR], defaults.labelColor),
@@ -129,6 +132,8 @@ class SettingsRepository(
 
     suspend fun setWidgetStyle(style: WidgetStyle) {
         dataStore.edit { prefs ->
+            val bg = style.backgroundColor
+            if (bg == null) prefs.remove(Keys.WIDGET_BG_COLOR) else prefs[Keys.WIDGET_BG_COLOR] = bg.toArgb()
             prefs[Keys.WIDGET_BG_ALPHA] = style.backgroundAlpha
             prefs[Keys.WIDGET_FROST] = style.frost
             prefs[Keys.WIDGET_LABEL_COLOR] = style.labelColor.name

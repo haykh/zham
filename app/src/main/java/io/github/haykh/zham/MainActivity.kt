@@ -8,6 +8,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -75,6 +76,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
@@ -602,9 +604,11 @@ fun SettingsDialog(
     val now = remember { ZonedDateTime.now() }
     var showLicense by remember { mutableStateOf(false) }
     var confirmRestore by remember { mutableStateOf(false) }
-    // Hoisted so restoring defaults can close the custom picker, whose wheel and hex
-    // field are seeded from the accent only when opened.
+    // Hoisted so restoring defaults can close the custom pickers, whose wheel and hex
+    // field are seeded from the colour only when opened.
     var showPicker by remember { mutableStateOf(false) }
+    var showBgPicker by remember { mutableStateOf(false) }
+    val autoWidgetBackground = widgetThemeSurface(themeMode.isDark(isSystemInDarkTheme()), pureBlack)
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
@@ -730,52 +734,25 @@ fun SettingsDialog(
                     // --- Accent: preset swatches + a custom RGB picker ---
                     Text("Accent", style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(12.dp))
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        accentPresets.forEach { preset ->
-                            AccentSwatch(
-                                color = preset,
-                                selected = preset == accent && !showPicker,
-                                onClick = {
-                                    showPicker = false
-                                    onSetAccent(preset)
-                                },
-                            )
-                        }
-                        // toggle the custom picker; the swatch shows the current accent
-                        Box(
-                            modifier =
-                                Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(accent)
-                                    .border(
-                                        width = if (showPicker) 3.dp else 1.dp,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        shape = CircleShape,
-                                    ).clickable { showPicker = !showPicker },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                ZhamIcons.Add,
-                                contentDescription = "Custom color",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    }
-                    if (showPicker) {
-                        Spacer(Modifier.height(12.dp))
-                        ColorSlidersPicker(color = accent, onColorChange = onSetAccent)
-                    }
+                    ColorChooser(
+                        selected = accent,
+                        showPicker = showPicker,
+                        onShowPickerChange = { showPicker = it },
+                        onSelect = { it?.let(onSetAccent) },
+                    )
 
                     Spacer(Modifier.height(20.dp))
 
-                    // --- Widget: background opacity + text colours ---
+                    // --- Widget: background colour, transparency, glass, text colours ---
                     Text("Widget", style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(8.dp))
-                    WidgetStyleSettings(style = widgetStyle, onChange = onSetWidgetStyle)
+                    WidgetStyleSettings(
+                        style = widgetStyle,
+                        onChange = onSetWidgetStyle,
+                        autoBackground = autoWidgetBackground,
+                        showBackgroundPicker = showBgPicker,
+                        onShowBackgroundPickerChange = { showBgPicker = it },
+                    )
 
                     Spacer(Modifier.height(20.dp))
                     Row(
@@ -810,6 +787,7 @@ fun SettingsDialog(
             confirmButton = {
                 TextButton(onClick = {
                     showPicker = false
+                    showBgPicker = false
                     onRestoreDefaults()
                     confirmRestore = false
                 }) { Text("Restore") }
@@ -861,8 +839,22 @@ private val LICENSE_TEXT =
 private fun WidgetStyleSettings(
     style: WidgetStyle,
     onChange: (WidgetStyle) -> Unit,
+    autoBackground: Color,
+    showBackgroundPicker: Boolean,
+    onShowBackgroundPickerChange: (Boolean) -> Unit,
 ) {
     Column {
+        Text("Background color", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+        ColorChooser(
+            selected = style.backgroundColor,
+            autoColor = autoBackground,
+            showPicker = showBackgroundPicker,
+            onShowPickerChange = onShowBackgroundPickerChange,
+            onSelect = { onChange(style.copy(backgroundColor = it)) },
+        )
+
+        Spacer(Modifier.height(12.dp))
         // Stored as opacity; shown as transparency (0% = solid, 100% = see-through).
         PercentSlider(
             title = "Background transparency",
@@ -946,11 +938,68 @@ private fun WidgetTextColorPicker(
     }
 }
 
+/**
+ * Colour swatches: an optional leading "Auto" swatch (follow the theme, reported as null and
+ * drawn in [autoColor]), the presets, and a "+" swatch that toggles a wheel + hex picker.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AccentSwatch(
+private fun ColorChooser(
+    selected: Color?,
+    showPicker: Boolean,
+    onShowPickerChange: (Boolean) -> Unit,
+    onSelect: (Color?) -> Unit,
+    autoColor: Color? = null,
+) {
+    // What the "+" swatch shows and what the picker starts from.
+    val current = selected ?: autoColor ?: DefaultAccent
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        if (autoColor != null) {
+            ColorSwatch(
+                color = autoColor,
+                selected = selected == null && !showPicker,
+                onClick = {
+                    onShowPickerChange(false)
+                    onSelect(null)
+                },
+                icon = ZhamIcons.ThemeSystem,
+                iconDescription = "Follow theme",
+            )
+        }
+        accentPresets.forEach { preset ->
+            ColorSwatch(
+                color = preset,
+                selected = preset == selected && !showPicker,
+                onClick = {
+                    onShowPickerChange(false)
+                    onSelect(preset)
+                },
+            )
+        }
+        ColorSwatch(
+            color = current,
+            selected = showPicker,
+            onClick = { onShowPickerChange(!showPicker) },
+            icon = ZhamIcons.Add,
+            iconDescription = "Custom color",
+        )
+    }
+    if (showPicker) {
+        Spacer(Modifier.height(12.dp))
+        ColorSlidersPicker(color = current, onColorChange = onSelect)
+    }
+}
+
+@Composable
+private fun ColorSwatch(
     color: Color,
     selected: Boolean,
     onClick: () -> Unit,
+    icon: ImageVector? = null,
+    iconDescription: String? = null,
 ) {
     Box(
         modifier =
@@ -963,7 +1012,13 @@ private fun AccentSwatch(
                     color = MaterialTheme.colorScheme.onSurface,
                     shape = CircleShape,
                 ).clickable(onClick = onClick),
-    )
+        contentAlignment = Alignment.Center,
+    ) {
+        if (icon != null) {
+            // Readable on any swatch colour (e.g. a white or black accent).
+            Icon(icon, contentDescription = iconDescription, tint = textColorOn(color), modifier = Modifier.size(20.dp))
+        }
+    }
 }
 
 @Composable

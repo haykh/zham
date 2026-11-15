@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget's background: tint + frosted-glass layers (sheen, grain, rim), clipped to our
+     own @dimen/widget_corner_radius. The rows are drawn on top by Glance, inset by padding.
+
+     Android 12+ launchers round widgets to their own (larger) system radius unless the
+     widget's @android:id/background view clips itself to its outline. This frame does exactly
+     that, with the invisible rounded widget_outline shape supplying the outline. Older Android
+     ignores clipToOutline here; their launchers draw widgets square anyway.
+
+     A launcher can't blur what's behind a widget, so "frosted" is approximated by the glass
+     layers; the app scales their opacity (setImageAlpha) from the "Frosted glass" setting. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_outline"
+    android:clipToOutline="true"
+    tools:targetApi="31">
+
+    <FrameLayout
+        android:id="@+id/frame_tint"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ImageView
+        android:id="@+id/glass_sheen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_glass_sheen" />
+
+    <ImageView
+        android:id="@+id/glass_grain"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_glass_grain" />
+
+    <ImageView
+        android:id="@+id/glass_edge"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_glass_edge" />
+</FrameLayout>

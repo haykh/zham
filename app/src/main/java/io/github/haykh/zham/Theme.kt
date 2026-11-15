@@ -79,6 +79,8 @@ enum class WidgetTextColor(
 
 /** Widget-only appearance settings. Defaults reproduce the original widget look. */
 data class WidgetStyle(
+    /** Background colour; null = follow the theme (see [widgetThemeSurface]). */
+    val backgroundColor: Color? = null,
     /** Background opacity, 0 (fully transparent) to 1 (opaque). */
     val backgroundAlpha: Float = 1f,
     /** Frosted-glass strength (rim + sheen + grain), 0 (off) to 1. */
@@ -86,6 +88,24 @@ data class WidgetStyle(
     val labelColor: WidgetTextColor = WidgetTextColor.AUTO,
     val timeColor: WidgetTextColor = WidgetTextColor.ACCENT,
 )
+
+/** The widget's "Auto" background: the app's light, dark or pure-black surface. */
+fun widgetThemeSurface(
+    dark: Boolean,
+    pureBlack: Boolean,
+): Color =
+    when {
+        !dark -> Color(0xFFFDFCFF)
+        pureBlack -> Color.Black
+        else -> Color(0xFF1C1B1F)
+    }
+
+/** Default ("Auto") text colour for [background]: the theme's light or dark text, whichever reads better. */
+fun textColorOn(background: Color): Color {
+    val darkText = Color(0xFF1C1B1F)
+    val lightText = Color(0xFFE6E1E5)
+    return if (contrastRatio(darkText, background) >= contrastRatio(lightText, background)) darkText else lightText
+}
 
 /** WCAG contrast ratio between two colours, from 1 (identical) to 21 (black on white). */
 fun contrastRatio(
