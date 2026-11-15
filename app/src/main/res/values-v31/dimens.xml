@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget corner radius on Android 12+. Launchers would otherwise round widgets to their
+         own (larger) system radius; the widget opts out of that (background view +
+         clipToOutline, see WorldClockWidget.kt) and clips to this instead. The glass rim
+         drawable uses the same value so it lines up with the corners. -->
+    <dimen name="widget_corner_radius">8dp</dimen>
+</resources>

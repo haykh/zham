@@ -8,6 +8,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -33,18 +34,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +51,10 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -63,6 +64,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -70,8 +72,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -105,22 +116,30 @@ class MainActivity : ComponentActivity() {
             val timeFormat by vm.timeFormat.collectAsStateWithLifecycle()
             val showFlags by vm.showFlags.collectAsStateWithLifecycle()
             val themeMode by vm.themeMode.collectAsStateWithLifecycle()
+            val pureBlack by vm.pureBlack.collectAsStateWithLifecycle()
             val accent by vm.accent.collectAsStateWithLifecycle()
-            WorldClockTheme(themeMode = themeMode, accent = accent) {
+            val widgetStyle by vm.widgetStyle.collectAsStateWithLifecycle()
+            WorldClockTheme(themeMode = themeMode, pureBlack = pureBlack, accent = accent) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     WorldClockApp(
                         cities = cities,
                         onAddCity = vm::addCity,
                         onRemoveCity = vm::removeCity,
+                        onRenameCity = vm::renameCity,
                         onReorder = vm::saveOrder,
                         themeMode = themeMode,
+                        pureBlack = pureBlack,
                         accent = accent,
                         onSetTheme = vm::setThemeMode,
+                        onSetPureBlack = vm::setPureBlack,
                         onSetAccent = vm::setAccent,
                         showFlags = showFlags,
                         timeFormat = timeFormat,
                         onSetShowFlags = vm::setShowFlags,
                         onSetTimeFormat = vm::setTimeFormat,
+                        widgetStyle = widgetStyle,
+                        onSetWidgetStyle = vm::setWidgetStyle,
+                        onRestoreDefaults = vm::restoreDefaults,
                     )
                 }
             }
@@ -134,15 +153,21 @@ fun WorldClockApp(
     cities: List<City>,
     onAddCity: (City) -> Unit,
     onRemoveCity: (City) -> Unit,
+    onRenameCity: (City, String) -> Unit,
     onReorder: (List<City>) -> Unit,
     themeMode: ThemeMode,
+    pureBlack: Boolean,
     accent: Color,
     onSetTheme: (ThemeMode) -> Unit,
+    onSetPureBlack: (Boolean) -> Unit,
     onSetAccent: (Color) -> Unit,
     showFlags: Boolean,
     timeFormat: String,
     onSetShowFlags: (Boolean) -> Unit,
     onSetTimeFormat: (String) -> Unit,
+    widgetStyle: WidgetStyle,
+    onSetWidgetStyle: (WidgetStyle) -> Unit,
+    onRestoreDefaults: () -> Unit,
 ) {
     val nav = rememberNavController()
     Scaffold(
@@ -162,7 +187,7 @@ fun WorldClockApp(
                             restoreState = true
                         }
                     },
-                    icon = { Text("🕐") },
+                    icon = { Icon(ZhamIcons.Clock, contentDescription = null) },
                     label = { Text("Clocks") },
                 )
                 NavigationBarItem(
@@ -174,7 +199,7 @@ fun WorldClockApp(
                             restoreState = true
                         }
                     },
-                    icon = { Text("🔄") },
+                    icon = { Icon(ZhamIcons.Convert, contentDescription = null) },
                     label = { Text("Convert") },
                 )
             }
@@ -190,15 +215,21 @@ fun WorldClockApp(
                     cities = cities,
                     onAddCity = onAddCity,
                     onRemoveCity = onRemoveCity,
+                    onRenameCity = onRenameCity,
                     onReorder = onReorder,
                     themeMode = themeMode,
+                    pureBlack = pureBlack,
                     accent = accent,
                     onSetTheme = onSetTheme,
+                    onSetPureBlack = onSetPureBlack,
                     onSetAccent = onSetAccent,
                     showFlags = showFlags,
                     timeFormat = timeFormat,
                     onSetShowFlags = onSetShowFlags,
                     onSetTimeFormat = onSetTimeFormat,
+                    widgetStyle = widgetStyle,
+                    onSetWidgetStyle = onSetWidgetStyle,
+                    onRestoreDefaults = onRestoreDefaults,
                 )
             }
             composable("convert") {
@@ -214,15 +245,21 @@ fun WorldClockScreen(
     cities: List<City>,
     onAddCity: (City) -> Unit,
     onRemoveCity: (City) -> Unit,
+    onRenameCity: (City, String) -> Unit,
     onReorder: (List<City>) -> Unit,
     themeMode: ThemeMode,
+    pureBlack: Boolean,
     accent: Color,
     onSetTheme: (ThemeMode) -> Unit,
+    onSetPureBlack: (Boolean) -> Unit,
     onSetAccent: (Color) -> Unit,
     showFlags: Boolean,
     timeFormat: String,
     onSetShowFlags: (Boolean) -> Unit,
     onSetTimeFormat: (String) -> Unit,
+    widgetStyle: WidgetStyle,
+    onSetWidgetStyle: (WidgetStyle) -> Unit,
+    onRestoreDefaults: () -> Unit,
 ) {
     var now by remember { mutableStateOf(ZonedDateTime.now()) }
 
@@ -251,13 +288,15 @@ fun WorldClockScreen(
 
     var showSettings by remember { mutableStateOf(false) }
 
+    var renaming by remember { mutableStateOf<City?>(null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("World Clock") },
                 actions = {
                     IconButton(onClick = { showSettings = true }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+                        Icon(ZhamIcons.Settings, contentDescription = "Settings")
                     }
                 },
             )
@@ -280,6 +319,7 @@ fun WorldClockScreen(
                         formatter = formatter,
                         showFlags = showFlags,
                         onRemove = { onRemoveCity(city) },
+                        onEdit = { renaming = city },
                         handleModifier = Modifier.draggableHandle(onDragStopped = { onReorder(items) }),
                     )
                 }
@@ -289,7 +329,7 @@ fun WorldClockScreen(
                     onClick = { showPicker = true },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
+                    Icon(ZhamIcons.Add, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text("Add city")
                 }
@@ -308,16 +348,32 @@ fun WorldClockScreen(
         )
     }
 
+    renaming?.let { city ->
+        RenameCityDialog(
+            city = city,
+            onRename = { label ->
+                onRenameCity(city, label)
+                renaming = null
+            },
+            onDismiss = { renaming = null },
+        )
+    }
+
     if (showSettings) {
         SettingsDialog(
             themeMode = themeMode,
+            pureBlack = pureBlack,
             accent = accent,
             showFlags = showFlags,
             timeFormat = timeFormat,
+            widgetStyle = widgetStyle,
             onSetTheme = onSetTheme,
+            onSetPureBlack = onSetPureBlack,
             onSetAccent = onSetAccent,
             onSetShowFlags = onSetShowFlags,
             onSetTimeFormat = onSetTimeFormat,
+            onSetWidgetStyle = onSetWidgetStyle,
+            onRestoreDefaults = onRestoreDefaults,
             onDismiss = { showSettings = false },
         )
     }
@@ -329,16 +385,17 @@ fun ClockRow(
     now: ZonedDateTime,
     formatter: DateTimeFormatter,
     showFlags: Boolean,
+    onClick: () -> Unit,
     handleModifier: Modifier,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                Icons.Default.Menu,
+                ZhamIcons.DragHandle,
                 contentDescription = "Drag to reorder ${city.label}",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                 modifier = handleModifier.padding(end = 12.dp),
@@ -366,6 +423,7 @@ fun SwipeableClockRow(
     formatter: DateTimeFormatter,
     showFlags: Boolean,
     onRemove: () -> Unit,
+    onEdit: () -> Unit,
     handleModifier: Modifier,
 ) {
     val density = LocalDensity.current
@@ -393,7 +451,7 @@ fun SwipeableClockRow(
                 modifier = Modifier.width(actionWidth),
             ) {
                 Icon(
-                    Icons.Default.Delete,
+                    ZhamIcons.Delete,
                     contentDescription = "Delete ${city.label}",
                     tint = MaterialTheme.colorScheme.onErrorContainer,
                 )
@@ -419,7 +477,17 @@ fun SwipeableClockRow(
                         },
                     ),
         ) {
-            ClockRow(city, now, formatter, showFlags, handleModifier)
+            ClockRow(
+                city = city,
+                now = now,
+                formatter = formatter,
+                showFlags = showFlags,
+                // Tap renames; if the delete action is showing, a tap just closes it.
+                onClick = {
+                    if (offsetX.value != 0f) scope.launch { offsetX.animateTo(0f) } else onEdit()
+                },
+                handleModifier = handleModifier,
+            )
         }
     }
 }
@@ -443,7 +511,7 @@ fun CityPickerDialog(
         }
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = MaterialTheme.shapes.large) {
+        Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 OutlinedTextField(
                     value = query,
@@ -462,10 +530,7 @@ fun CityPickerDialog(
                                     .fillMaxWidth()
                                     .clickable(enabled = !already) {
                                         onPick(
-                                            City(
-                                                label = zoneId.substringAfterLast('/').replace('_', ' '),
-                                                zoneIdName = zoneId,
-                                            ),
+                                            City(label = City.defaultLabel(zoneId), zoneIdName = zoneId),
                                         )
                                     }.padding(vertical = 12.dp),
                         )
@@ -476,24 +541,77 @@ fun CityPickerDialog(
     }
 }
 
+/** Rename a city (e.g. "Tokyo" instead of "Japan", or "NYC" for a narrower widget). */
+@Composable
+fun RenameCityDialog(
+    city: City,
+    onRename: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val defaultLabel = remember(city.zoneIdName) { City.defaultLabel(city.zoneIdName) }
+    // Start with the current name selected, so typing replaces it outright.
+    var name by remember { mutableStateOf(TextFieldValue(city.label, TextRange(0, city.label.length))) }
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Rename city") },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") },
+                placeholder = { Text(defaultLabel) },
+                supportingText = { Text(city.zoneIdName) },
+                trailingIcon = {
+                    if (name.text != defaultLabel) {
+                        IconButton(onClick = { name = TextFieldValue(defaultLabel, TextRange(defaultLabel.length)) }) {
+                            Icon(ZhamIcons.Restore, contentDescription = "Restore default name")
+                        }
+                    }
+                },
+                singleLine = true,
+                keyboardOptions =
+                    KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { onRename(name.text) }),
+                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+            )
+        },
+        confirmButton = { TextButton(onClick = { onRename(name.text) }) { Text("Save") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun SettingsDialog(
     themeMode: ThemeMode,
+    pureBlack: Boolean,
     accent: Color,
     showFlags: Boolean,
     timeFormat: String,
+    widgetStyle: WidgetStyle,
     onSetTheme: (ThemeMode) -> Unit,
+    onSetPureBlack: (Boolean) -> Unit,
     onSetAccent: (Color) -> Unit,
     onSetShowFlags: (Boolean) -> Unit,
     onSetTimeFormat: (String) -> Unit,
+    onSetWidgetStyle: (WidgetStyle) -> Unit,
+    onRestoreDefaults: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val now = remember { ZonedDateTime.now() }
     var showLicense by remember { mutableStateOf(false) }
+    var confirmRestore by remember { mutableStateOf(false) }
+    // Hoisted so restoring defaults can close the custom pickers, whose wheel and hex
+    // field are seeded from the colour only when opened.
+    var showPicker by remember { mutableStateOf(false) }
+    var showBgPicker by remember { mutableStateOf(false) }
+    val autoWidgetBackground = widgetThemeSurface(themeMode.isDark(isSystemInDarkTheme()), pureBlack)
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(shape = MaterialTheme.shapes.large) {
+        Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
             val density = LocalDensity.current
             CompositionLocalProvider(
                 LocalDensity provides Density(density.density, density.fontScale / 1.2f),
@@ -528,7 +646,13 @@ fun SettingsDialog(
                             onValueChange = {},
                             readOnly = true,
                             label = { Text("Preset") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                            trailingIcon = {
+                                Icon(
+                                    ZhamIcons.ChevronDown,
+                                    contentDescription = null,
+                                    modifier = Modifier.rotate(if (expanded) 180f else 0f),
+                                )
+                            },
                             modifier =
                                 Modifier
                                     .menuAnchor(MenuAnchorType.PrimaryNotEditable)
@@ -580,9 +704,29 @@ fun SettingsDialog(
                     Text("Theme", style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(8.dp))
                     OutlinedButton(onClick = { onSetTheme(themeMode.next()) }) {
-                        Text(themeMode.emoji())
+                        Icon(themeMode.icon(), contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(themeMode.name.lowercase().replaceFirstChar { it.uppercase() })
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Pure black", style = MaterialTheme.typography.titleMedium)
+                            Text(
+                                "AMOLED black background in dark mode",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Switch(
+                            checked = pureBlack,
+                            onCheckedChange = onSetPureBlack,
+                            enabled = themeMode != ThemeMode.LIGHT,
+                        )
                     }
 
                     Spacer(Modifier.height(20.dp))
@@ -590,55 +734,68 @@ fun SettingsDialog(
                     // --- Accent: preset swatches + a custom RGB picker ---
                     Text("Accent", style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(12.dp))
-                    var showPicker by remember { mutableStateOf(false) }
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                    ) {
-                        accentPresets.forEach { preset ->
-                            AccentSwatch(
-                                color = preset,
-                                selected = preset == accent && !showPicker,
-                                onClick = {
-                                    showPicker = false
-                                    onSetAccent(preset)
-                                },
-                            )
-                        }
-                        // toggle the custom picker; the swatch shows the current accent
-                        Box(
-                            modifier =
-                                Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(accent)
-                                    .border(
-                                        width = if (showPicker) 3.dp else 1.dp,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        shape = CircleShape,
-                                    ).clickable { showPicker = !showPicker },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                Icons.Default.Add,
-                                contentDescription = "Custom color",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    }
-                    if (showPicker) {
-                        Spacer(Modifier.height(12.dp))
-                        ColorSlidersPicker(color = accent, onColorChange = onSetAccent)
-                    }
+                    ColorChooser(
+                        selected = accent,
+                        showPicker = showPicker,
+                        onShowPickerChange = { showPicker = it },
+                        onSelect = { it?.let(onSetAccent) },
+                    )
 
                     Spacer(Modifier.height(20.dp))
-                    TextButton(
-                        onClick = { showLicense = true },
-                        contentPadding = PaddingValues(0.dp),
-                    ) { Text("License") }
+
+                    // --- Widget: background colour, transparency, glass, text colours ---
+                    Text("Widget", style = MaterialTheme.typography.titleLarge)
+                    Spacer(Modifier.height(8.dp))
+                    WidgetStyleSettings(
+                        style = widgetStyle,
+                        onChange = onSetWidgetStyle,
+                        autoBackground = autoWidgetBackground,
+                        showBackgroundPicker = showBgPicker,
+                        onShowBackgroundPickerChange = { showBgPicker = it },
+                    )
+
+                    Spacer(Modifier.height(20.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        TextButton(
+                            onClick = { showLicense = true },
+                            contentPadding = PaddingValues(0.dp),
+                        ) { Text("License") }
+                        TextButton(
+                            onClick = { confirmRestore = true },
+                            contentPadding = PaddingValues(0.dp),
+                        ) { Text("Restore defaults") }
+                    }
                 }
             }
         }
+    }
+
+    if (confirmRestore) {
+        AlertDialog(
+            onDismissRequest = { confirmRestore = false },
+            title = { Text("Restore defaults?") },
+            text = {
+                Text(
+                    "Theme, accent, time format, flags and widget appearance go back to their " +
+                        "defaults, and every city gets its original name back. " +
+                        "Your cities and their order are kept.",
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showPicker = false
+                    showBgPicker = false
+                    onRestoreDefaults()
+                    confirmRestore = false
+                }) { Text("Restore") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRestore = false }) { Text("Cancel") }
+            },
+        )
     }
 
     if (showLicense) {
@@ -679,10 +836,170 @@ private val LICENSE_TEXT =
         "along with this program.  If not, see <http://www.gnu.org/licenses/>."
 
 @Composable
-private fun AccentSwatch(
+private fun WidgetStyleSettings(
+    style: WidgetStyle,
+    onChange: (WidgetStyle) -> Unit,
+    autoBackground: Color,
+    showBackgroundPicker: Boolean,
+    onShowBackgroundPickerChange: (Boolean) -> Unit,
+) {
+    Column {
+        Text("Background color", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+        ColorChooser(
+            selected = style.backgroundColor,
+            autoColor = autoBackground,
+            showPicker = showBackgroundPicker,
+            onShowPickerChange = onShowBackgroundPickerChange,
+            onSelect = { onChange(style.copy(backgroundColor = it)) },
+        )
+
+        Spacer(Modifier.height(12.dp))
+        // Stored as opacity; shown as transparency (0% = solid, 100% = see-through).
+        PercentSlider(
+            title = "Background transparency",
+            value = 1f - style.backgroundAlpha,
+            onValueChangeFinished = { onChange(style.copy(backgroundAlpha = 1f - it)) },
+        )
+        Spacer(Modifier.height(4.dp))
+        PercentSlider(
+            title = "Frosted glass",
+            subtitle = "Glass rim, sheen and grain. Best with some transparency.",
+            value = style.frost,
+            onValueChangeFinished = { onChange(style.copy(frost = it)) },
+        )
+
+        Spacer(Modifier.height(4.dp))
+        Text("City names", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(4.dp))
+        WidgetTextColorPicker(selected = style.labelColor) { onChange(style.copy(labelColor = it)) }
+
+        Spacer(Modifier.height(12.dp))
+        Text("Times", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(4.dp))
+        WidgetTextColorPicker(selected = style.timeColor) { onChange(style.copy(timeColor = it)) }
+    }
+}
+
+/**
+ * A 0–100% slider in 10% steps. It moves locally while dragging and reports once on release,
+ * so the widget is re-rendered once rather than on every drag frame.
+ */
+@Composable
+private fun PercentSlider(
+    title: String,
+    value: Float,
+    onValueChangeFinished: (Float) -> Unit,
+    subtitle: String? = null,
+) {
+    var current by remember(value) { mutableFloatStateOf(value) }
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            Text("${(current * 100).roundToInt()}%", style = MaterialTheme.typography.bodyMedium)
+        }
+        if (subtitle != null) {
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Slider(
+            value = current,
+            onValueChange = { current = it },
+            onValueChangeFinished = { onValueChangeFinished(current) },
+            steps = 9,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WidgetTextColorPicker(
+    selected: WidgetTextColor,
+    onSelect: (WidgetTextColor) -> Unit,
+) {
+    val options = WidgetTextColor.entries
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+        options.forEachIndexed { index, option ->
+            SegmentedButton(
+                selected = option == selected,
+                onClick = { onSelect(option) },
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                colors = SegmentedButtonDefaults.colors(inactiveContainerColor = Color.Transparent),
+                icon = {}, // no checkmark: four labels need the width
+                label = { Text(option.label, maxLines = 1) },
+            )
+        }
+    }
+}
+
+/**
+ * Colour swatches: an optional leading "Auto" swatch (follow the theme, reported as null and
+ * drawn in [autoColor]), the presets, and a "+" swatch that toggles a wheel + hex picker.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ColorChooser(
+    selected: Color?,
+    showPicker: Boolean,
+    onShowPickerChange: (Boolean) -> Unit,
+    onSelect: (Color?) -> Unit,
+    autoColor: Color? = null,
+) {
+    // What the "+" swatch shows and what the picker starts from.
+    val current = selected ?: autoColor ?: DefaultAccent
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        if (autoColor != null) {
+            ColorSwatch(
+                color = autoColor,
+                selected = selected == null && !showPicker,
+                onClick = {
+                    onShowPickerChange(false)
+                    onSelect(null)
+                },
+                icon = ZhamIcons.ThemeSystem,
+                iconDescription = "Follow theme",
+            )
+        }
+        accentPresets.forEach { preset ->
+            ColorSwatch(
+                color = preset,
+                selected = preset == selected && !showPicker,
+                onClick = {
+                    onShowPickerChange(false)
+                    onSelect(preset)
+                },
+            )
+        }
+        ColorSwatch(
+            color = current,
+            selected = showPicker,
+            onClick = { onShowPickerChange(!showPicker) },
+            icon = ZhamIcons.Add,
+            iconDescription = "Custom color",
+        )
+    }
+    if (showPicker) {
+        Spacer(Modifier.height(12.dp))
+        ColorSlidersPicker(color = current, onColorChange = onSelect)
+    }
+}
+
+@Composable
+private fun ColorSwatch(
     color: Color,
     selected: Boolean,
     onClick: () -> Unit,
+    icon: ImageVector? = null,
+    iconDescription: String? = null,
 ) {
     Box(
         modifier =
@@ -695,7 +1012,13 @@ private fun AccentSwatch(
                     color = MaterialTheme.colorScheme.onSurface,
                     shape = CircleShape,
                 ).clickable(onClick = onClick),
-    )
+        contentAlignment = Alignment.Center,
+    ) {
+        if (icon != null) {
+            // Readable on any swatch colour (e.g. a white or black accent).
+            Icon(icon, contentDescription = iconDescription, tint = textColorOn(color), modifier = Modifier.size(20.dp))
+        }
+    }
 }
 
 @Composable
@@ -704,6 +1027,11 @@ private fun ColorSlidersPicker(
     onColorChange: (Color) -> Unit,
 ) {
     val controller = rememberColorPickerController()
+    // Hex digits as typed (no '#'). Kept in sync synchronously from the wheel callback
+    // rather than from `color`: that value round-trips through DataStore and would land
+    // late, clobbering text the user is still typing. (Picking a preset closes this picker,
+    // and reopening it starts fresh from the current colour.)
+    var hex by remember { mutableStateOf(color.toHex()) }
     Column {
         HsvColorPicker(
             modifier =
@@ -714,7 +1042,10 @@ private fun ColorSlidersPicker(
             initialColor = color,
             onColorChanged = { envelope ->
                 // fromUser guards against the initial/programmatic callback re-writing state.
-                if (envelope.fromUser) onColorChange(envelope.color)
+                if (envelope.fromUser) {
+                    hex = envelope.color.toHex()
+                    onColorChange(envelope.color)
+                }
             },
         )
         Spacer(Modifier.height(8.dp))
@@ -724,6 +1055,30 @@ private fun ColorSlidersPicker(
                     .fillMaxWidth()
                     .height(28.dp),
             controller = controller,
+        )
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(
+            value = hex,
+            onValueChange = { input ->
+                hex = input.filter { it.isHexDigit() }.take(6).uppercase()
+                parseHexColor(hex)?.let { parsed ->
+                    // Move the wheel to match; fromUser=false so its callback doesn't echo back.
+                    controller.selectByColor(parsed, fromUser = false)
+                    onColorChange(parsed)
+                }
+            },
+            label = { Text("Hex") },
+            prefix = { Text("#") },
+            isError = parseHexColor(hex) == null,
+            singleLine = true,
+            keyboardOptions =
+                KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Characters,
+                    autoCorrectEnabled = false,
+                    keyboardType = KeyboardType.Ascii,
+                    imeAction = ImeAction.Done,
+                ),
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

@@ -1,0 +1,5 @@
+- Tap the city/timezone to rename it 
+- Tap the widget to open the app 
+- Pure black (AMOLED) dark mode, white/black accent presets, and hex color input 
+- New minimalist icons and a restore defaults option in the settings
+- Widget: custom background color and transparency, frosted-glass look, custom text colors, smaller corners

@@ -23,20 +23,22 @@
 ## Features
 
 - 🕐 **World clock** -- track the current time in as many cities as you like, with live seconds and country flags.
-- ➕ **Easy to manage** -- search 600+ time zones to add a city, swipe to delete, drag to reorder.
+- ➕ **Easy to manage** -- search 600+ time zones to add a city, tap to rename it (*Tokyo*, *NYC*, …), swipe to delete, drag to reorder.
 - 🔄 **Time converter** -- scrub a time *and* date to see the matching moment everywhere at once; pick any city as the reference and spot day rollovers at a glance (**+1d** / **−1d**).
-- 🎨 **Make it yours** -- Light / Dark / System theme and any accent color, via a colour wheel.
-- 📲 **Home-screen widget** -- resizable, scrollable, matches your theme, and stays in sync as you change your cities.
+- 🎨 **Make it yours** -- Light / Dark / System theme with an optional pure-black AMOLED mode, and any accent color via a colour wheel or hex code.
+- 📲 **Home-screen widget** -- resizable, scrollable, matches your theme or any background colour you like, can go transparent with an optional frosted-glass look, uses your choice of text colours, opens the app on tap, and stays in sync as you change your cities.
 - ⏱️ **Flexible format** -- 12-hour / 24-hour presets, or your own custom pattern.
 
 ## Screenshots
 
 <p align="center">
-  <img src="screenshots/01-clocks.png" width="30%" alt="World clock list" />
+  <img src="screenshots/01-clocks.png" width="23%" alt="World clock list" />
   &nbsp;
-  <img src="screenshots/02-converter.png" width="30%" alt="Time converter" />
+  <img src="screenshots/02-converter.png" width="23%" alt="Time converter" />
   &nbsp;
-  <img src="screenshots/03-settings.png" width="30%" alt="Settings" />
+  <img src="screenshots/03-settings.png" width="23%" alt="Settings" />
+  &nbsp;
+  <img src="screenshots/04-widget.jpg" width="23%" alt="Home-screen widget with the frosted-glass look" />
 </p>
 
 ## Install

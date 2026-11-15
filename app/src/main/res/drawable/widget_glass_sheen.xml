@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Frosted-glass sheen: soft light falling from the top-left corner. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="315"
+        android:centerX="0.45"
+        android:startColor="#66FFFFFF"
+        android:centerColor="#14FFFFFF"
+        android:endColor="#00FFFFFF"
+        android:type="linear" />
+</shape>

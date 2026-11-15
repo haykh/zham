@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Frosted-glass grain: a 128px noise tile (random light/dark specks, low alpha) repeated
+     across the widget. nodpi so the specks stay pixel-fine on every screen density. -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/widget_glass_grain_tile"
+    android:tileMode="repeat" />

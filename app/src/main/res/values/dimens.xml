@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Launchers before Android 12 draw widgets with square corners. -->
+    <dimen name="widget_corner_radius">0dp</dimen>
+</resources>
